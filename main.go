@@ -5,7 +5,23 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"strconv"
+	"sync"
 )
+
+type peers struct {
+	v map[string]*peer
+	m sync.Mutex // Mutex를 넣어야 unlock/lock 가능
+}
+
+var Peers peers = peers{
+	v: make(map[string]*peer),
+}
+
+type peer struct {
+	key  string
+	conn *websocket.Conn
+}
 
 func main() {
 	http.Handle("/", http.FileServer(http.Dir("static")))
@@ -25,26 +41,39 @@ var upgrader = websocket.Upgrader{
 
 func socketHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
-	defer conn.Close()
 	if err != nil {
 		log.Printf("upgrader.Upgrade: %v", err)
 		return
 	}
+
+	key := strconv.Itoa(len(Peers.v))
+
+	p := &peer{
+		conn: conn,
+		key:  key,
+	}
+	Peers.v[key] = p
+
+	go p.read()
+}
+
+func (peer *peer) read() {
 	for {
-		messageType, p, err := conn.ReadMessage()
-		fmt.Println(string(p))
+		messageType, payload, err := peer.conn.ReadMessage()
+		fmt.Println(string(payload))
 
 		if err != nil {
 			log.Printf("conn.ReadMessage: %v", err)
 			return
 		}
 
-		// 메세지 생성 => 메세지 발송한 부분에서만 메시지를 받을 수 있고
-		// 제 3자에 경우는 메시지를 받지 못함
-		if err := conn.WriteMessage(messageType, p); err != nil {
-			log.Printf("conn.WriteMessage: %v", err)
-			return
+		// 이벤트?
+		for _, p := range Peers.v {
+			if err := p.conn.WriteMessage(messageType, payload); err != nil {
+				log.Printf("conn.WriteMessage: %v", err)
+				return
+			}
+
 		}
 	}
-
 }
