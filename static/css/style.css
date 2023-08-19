@@ -6,11 +6,12 @@ body {
 }
 
 .chat-container {
-    max-width: 400px;
+    padding-top: 5px;
     margin: 20px auto;
     border-radius: 10px;
     background-color: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
 }
 
 .message {
@@ -19,17 +20,19 @@ body {
     border-radius: 10px;
     font-size: 14px;
     max-width: 400px;
-    display: flex;
 }
 
 .user-message {
-    background-color: #dfe4ea;
+    margin-left: 200px;
+    text-align: right;
+    background-color: #007aff;
+    color: #fff;
     align-self: flex-start;
 }
 
 .other-message {
-    background-color: #007aff;
-    color: #fff;
+    text-align: left;
+    background-color: #dfe4ea;
     align-self: flex-end;
 }
 

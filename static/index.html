@@ -11,8 +11,8 @@
   <ul id="messages">
     <!-- 보내는 사람 구분 하기 -->
     <!-- 내가 보낸거랑, 남이 보낸거   -->
-    <li class="message other-message">안녕! 어떻게 도와줄까요?</li>
-    <li class="message user-message">안녕하세요! 문의 사항이 있으신가요?</li>
+    <li class="message other-message"><strong>가이드</strong>: 안녕! 어떻게 도와줄까요?</li>
+    <li class="message user-message">안녕하세요! 문의 사항이 있어서요.</li>
 
   </ul>
 
@@ -31,25 +31,31 @@
             + (location.port ? ':' + location.port : '')
             + '/ws';
 
-    function log(text, label) {
-      label = label || 'Status';
-      $('#messages').append(`<li class="message user-message">${label}: ${text}</li>`);
+    function log(text, isMe) {
+      if (isMe === true) {
+        $('#messages').append(`<li class="message user-message"> ${text}</li>`);
+      }else {
+        $('#messages').append(`<li class="message other-message"><strong>사용자이름</strong>: ${text}</li>`);
+      }
     }
 
     var websocket = new WebSocket(webSocketUri);
-    websocket.onopen = function () {
+
+    /*websocket.onopen = function () {
       log('Connected');
     };
     websocket.onclose = function () {
       log('Closed');
-    };
+    };*/
+
     websocket.onmessage = function (e) {
-      log(e.data, 'Message received')
+      log(e.data ,true)
     };
     websocket.onerror = function (e) {
-      log('Error (see console)');
+      log('에러 발생');
       console.log(e);
     };
+
     $('#chat-form').submit(function (e) {
       e.preventDefault();
       var data = $('#chat-text').val();
@@ -59,6 +65,9 @@
         $('#chat-text').val('');
       }
     });
+
+    var userName = prompt('이름을 입력해주세요', '');
+    // Rest API 요청보내기
   });
 </script>
 </body>
