@@ -1,27 +1,13 @@
 package main
 
 import (
+	"chat.com/p2p"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"strconv"
-	"sync"
 )
-
-type peers struct {
-	v map[string]*peer
-	m sync.Mutex // Mutex를 넣어야 unlock/lock 가능
-}
-
-var Peers peers = peers{
-	v: make(map[string]*peer),
-}
-
-type peer struct {
-	key  string
-	conn *websocket.Conn
-}
 
 func main() {
 	http.Handle("/", http.FileServer(http.Dir("static")))
@@ -40,40 +26,20 @@ var upgrader = websocket.Upgrader{
 }
 
 func socketHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("[socketHandler]")
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("upgrader.Upgrade: %v", err)
 		return
 	}
 
-	key := strconv.Itoa(len(Peers.v))
+	key := strconv.Itoa(len(p2p.Peers.V))
 
-	p := &peer{
-		conn: conn,
-		key:  key,
+	p := &p2p.Peer{
+		Conn: conn,
+		Key:  key,
 	}
-	Peers.v[key] = p
+	p2p.Peers.V[key] = p
 
-	go p.read()
-}
-
-func (peer *peer) read() {
-	for {
-		messageType, payload, err := peer.conn.ReadMessage()
-		fmt.Println(string(payload))
-
-		if err != nil {
-			log.Printf("conn.ReadMessage: %v", err)
-			return
-		}
-
-		// 이벤트?
-		for _, p := range Peers.v {
-			if err := p.conn.WriteMessage(messageType, payload); err != nil {
-				log.Printf("conn.WriteMessage: %v", err)
-				return
-			}
-
-		}
-	}
+	go p.Read()
 }
