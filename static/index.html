@@ -1,87 +1,28 @@
-<!doctype html>
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>Google App Engine Flexible Environment - Golang Websockets Chat</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta charset="utf-8">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font: 13px Helvetica, Arial;
-    }
-
-    form {
-      background: #000;
-      padding: 3px;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-    }
-
-    form input {
-      border: 0;
-      padding: 10px;
-      width: 90%;
-      margin-right: .5%;
-    }
-
-    form button {
-      width: 9%;
-      background: rgb(130, 224, 255);
-      border: none;
-      padding: 10px;
-    }
-
-    #messages {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    #messages li {
-      padding: 5px 10px;
-    }
-
-    #messages li:nth-child(odd) {
-      background: #dedede;
-    }
-
-    #messages li:last-child {
-      background: #aea;
-    }
-
-    section {
-      background-color: #eee;
-      border: 3px dashed #888;
-      border-radius: 10px;
-      margin: 30px;
-      margin-bottom: 80px;
-      padding: 5px;
-    }
-  </style>
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+  <title>Chat</title>
 </head>
-
 <body>
+<div class="chat-container">
+  <ul id="messages">
+    <!-- 보내는 사람 구분 하기 -->
+    <!-- 내가 보낸거랑, 남이 보낸거   -->
+    <li class="message other-message">안녕! 어떻게 도와줄까요?</li>
+    <li class="message user-message">안녕하세요! 문의 사항이 있으신가요?</li>
 
-<h1>Websockets Chat Demo</h1>
+  </ul>
 
-<form id="chat-form">
-  <input type="text" id="chat-text" autocomplete="off" placeholder="Enter some text...">
-  <button type="submit">Send</button>
-</form>
+  <form class="input-container" id="chat-form">
+    <input type="text" class="input-box" placeholder="메시지를 입력하세요" id="chat-text">
+    <button class="send-button">전송</button>
+  </form>
+</div>
 
-<section>
-
-  <ul id="messages"></ul>
-</section>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
 <script>
   $(function () {
     var scheme = window.location.protocol == "https:" ? 'wss://' : 'ws://';
@@ -92,7 +33,7 @@
 
     function log(text, label) {
       label = label || 'Status';
-      $('#messages').append(`<li> <strong>${label}</strong>: ${text}`);
+      $('#messages').append(`<li class="message user-message">${label}: ${text}</li>`);
     }
 
     var websocket = new WebSocket(webSocketUri);
@@ -121,5 +62,4 @@
   });
 </script>
 </body>
-
 </html>
