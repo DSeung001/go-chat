@@ -9,11 +9,10 @@ import (
 	"strconv"
 )
 
-func Start() {
+func Start(port int) {
 	http.Handle("/", http.FileServer(http.Dir("static")))
 	http.HandleFunc("/ws", socketHandler)
 
-	port := 8080
 	log.Printf("Listening on port %d", port)
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
 		log.Fatal(err)

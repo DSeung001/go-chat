@@ -1,7 +1,13 @@
 package main
 
-import "chat.com/route"
+import (
+	"chat.com/rest"
+	"chat.com/route"
+)
 
 func main() {
-	route.Start()
+	port := 8080
+
+	route.Start(port)
+	rest.Start(port)
 }
