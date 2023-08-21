@@ -41,13 +41,6 @@
 
     var websocket = new WebSocket(webSocketUri);
 
-    /*websocket.onopen = function () {
-      log('Connected');
-    };
-    websocket.onclose = function () {
-      log('Closed');
-    };*/
-
     websocket.onmessage = function (e) {
       log(e.data ,true)
     };
@@ -58,7 +51,7 @@
 
     $('#chat-form').submit(function (e) {
       e.preventDefault();
-      var data = $('#chat-text').val();
+      let data = $('#chat-text').val();
       if (data) {
         websocket.send(data);
         window.scrollTo(0, document.body.scrollHeight)
@@ -66,8 +59,21 @@
       }
     });
 
-    var userName = prompt('이름을 입력해주세요', '');
-    // Rest API 요청보내기
+    let userName = prompt('이름을 입력해주세요', '');
+    if (userName !== null) {
+      let apiUrl = "localhost:8080/getUser";
+
+      // API 요청 보내기
+      $.get(apiUrl)
+              .done(function(response) {
+                console.log("API 응답:", response);
+              })
+              .fail(function(jqXHR, textStatus, errorThrown) {
+                console.log("API 요청 실패:", textStatus, errorThrown);
+              });
+    } else {
+      console.log("사용자가 입력을 취소했습니다.");
+    }
   });
 </script>
 </body>
