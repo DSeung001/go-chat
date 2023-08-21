@@ -3,7 +3,6 @@ package route
 import (
 	"chat.com/p2p"
 	"chat.com/utils"
-	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -18,9 +17,9 @@ func Start(port int) {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/getUser", GetUserHandler).Methods("GET")
-	router.HandleFunc("/setUser", SetUserHandler).Methods("POST")
-	router.HandleFunc("/ws", socketHandler).Methods("POST")
+	//router.HandleFunc("/getUser", GetUserHandler).Methods("GET")
+	router.HandleFunc("/login", LoginHandler).Methods("POST")
+	router.HandleFunc("/ws", socketHandler).Methods("POST", "GET")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
 	log.Printf("Listening on port %d", port)
@@ -35,7 +34,7 @@ var upgrader = websocket.Upgrader{
 var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 
 type userRequestBody struct {
-	Name string
+	name string
 }
 
 func socketHandler(w http.ResponseWriter, r *http.Request) {
@@ -57,21 +56,17 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	go p.Read()
 }
 
-func GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("GetUserHandler")
-
-	userSession, _ := store.Get(r, "user")
-	json.NewEncoder(w).Encode(userSession.Values)
-}
-
-func SetUserHandler(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("LoginHandler")
 	session, _ := store.Get(r, "user")
 
-	var userRequestBody userRequestBody
-	json.NewDecoder(r.Body).Decode(&userRequestBody)
-
-	session.Values["user"] = userRequestBody
-
+	// 세션 저장
+	var user userRequestBody
+	user = userRequestBody{name: r.PostFormValue("name")}
+	session.Values["user"] = user.name
 	utils.HandleErr(session.Save(r, w))
+
+	// 결과 반환
 	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(user.name))
 }
