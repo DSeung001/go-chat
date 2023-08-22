@@ -2,14 +2,11 @@ package route
 
 import (
 	"chat.com/p2p"
-	"chat.com/utils"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 )
 
@@ -31,8 +28,6 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-
 type userRequestBody struct {
 	name string
 }
@@ -52,20 +47,14 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 		Key:  key,
 	}
 	p2p.Peers.V[key] = p
-	userSession, _ := store.Get(r, "userSession")
-	userName := fmt.Sprintf("%v", userSession.Values["name"])
-	go p.Read(userName)
+	go p.Read()
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("LoginHandler")
-	userSession, _ := store.Get(r, "userSession")
 
-	// 세션 저장
 	var user userRequestBody
 	user = userRequestBody{name: r.PostFormValue("name")}
-	userSession.Values["name"] = user.name
-	utils.HandleErr(userSession.Save(r, w))
 
 	// 결과 반환
 	w.WriteHeader(http.StatusCreated)

@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"chat.com/utils"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -18,31 +19,26 @@ var Peers = peers{
 }
 
 type Peer struct {
-	Key  string
-	Conn *websocket.Conn
+	Key    string
+	Author string
+	Conn   *websocket.Conn
 }
 
 // Struct 내부 필드가 전역이 아니면 WriteMessage 에 넘겼을 때 사용을 못함
 type chatMessage struct {
 	Author  string `json:"Author"`
-	Content string `json:"Content"`
+	Message string `json:"Message"`
 }
 
-func (peer *Peer) Read(userName string) {
+func (peer *Peer) Read() {
 	for {
 		messageType, payload, err := peer.Conn.ReadMessage()
 		if err != nil {
 			log.Printf("conn.ReadMessage: %v", err)
 			return
 		}
-
-		// 페이로드에 작성자 값 추가!
-		fmt.Printf("%s: %s \n", userName, string(payload))
-
-		chat := chatMessage{
-			Author:  userName,
-			Content: string(payload),
-		}
+		var chat chatMessage
+		utils.HandleErr(json.Unmarshal([]byte(payload), &chat))
 
 		byteChat, err := json.Marshal(chat)
 		if err != nil {
