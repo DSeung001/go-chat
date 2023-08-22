@@ -52,19 +52,20 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 		Key:  key,
 	}
 	p2p.Peers.V[key] = p
-
-	go p.Read()
+	userSession, _ := store.Get(r, "userSession")
+	userName := fmt.Sprintf("%v", userSession.Values["name"])
+	go p.Read(userName)
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("LoginHandler")
-	session, _ := store.Get(r, "user")
+	userSession, _ := store.Get(r, "userSession")
 
 	// 세션 저장
 	var user userRequestBody
 	user = userRequestBody{name: r.PostFormValue("name")}
-	session.Values["user"] = user.name
-	utils.HandleErr(session.Save(r, w))
+	userSession.Values["name"] = user.name
+	utils.HandleErr(userSession.Save(r, w))
 
 	// 결과 반환
 	w.WriteHeader(http.StatusCreated)

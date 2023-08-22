@@ -1,84 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" type="text/css" href="css/style.css">
-  <title>Chat</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <title>Chat</title>
 </head>
 <body>
 <div class="chat-container">
-  <ul id="messages">
-    <!-- 보내는 사람 구분 하기 -->
-    <!-- 내가 보낸거랑, 남이 보낸거   -->
-    <li class="message other-message"><strong>가이드</strong>: 안녕! 어떻게 도와줄까요?</li>
-    <li class="message user-message">안녕하세요! 문의 사항이 있어서요.</li>
+    <ul id="messages">
+        <!-- 보내는 사람 구분 하기 -->
+        <!-- 내가 보낸거랑, 남이 보낸거   -->
+        <li class="message other-message"><strong>가이드</strong>: 안녕! 어떻게 도와줄까요?</li>
+        <li class="message user-message">안녕하세요! 문의 사항이 있어서요.</li>
 
-  </ul>
+    </ul>
 
-  <form class="input-container" id="chat-form">
-    <input type="text" class="input-box" placeholder="메시지를 입력하세요" id="chat-text">
-    <button class="send-button">전송</button>
-  </form>
+    <form class="input-container" id="chat-form">
+        <input type="text" class="input-box" placeholder="메시지를 입력하세요" id="chat-text">
+        <button class="send-button">전송</button>
+    </form>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"
+        integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
 <script>
-  $(function () {
-    var scheme = window.location.protocol == "https:" ? 'wss://' : 'ws://';
-    var webSocketUri = scheme
+    $(function () {
+        var scheme = window.location.protocol == "https:" ? 'wss://' : 'ws://';
+        var webSocketUri = scheme
             + window.location.hostname
             + (location.port ? ':' + location.port : '')
             + '/ws';
+        const userName = prompt('이름을 입력해주세요', '');
 
-    function log(text, isMe) {
-      if (isMe === true) {
-        $('#messages').append(`<li class="message user-message"> ${text}</li>`);
-      } else {
-        $('#messages').append(`<li class="message other-message"><strong>사용자이름</strong>: ${text}</li>`);
-      }
-    }
+        function log(data, isAuthor) {
 
-    var websocket = new WebSocket(webSocketUri);
+            let message = ""
+            if (typeof data === 'object') {
+                message = `[${data.Author}]: ${data.Content}`
+            }else {
+                message = data
+            }
 
-    websocket.onmessage = function (e) {
-      log(e.data, true)
-    };
-    websocket.onerror = function (e) {
-      log('에러 발생');
-      console.log(e);
-    };
+            if (isAuthor === userName) {
+                $('#messages').append(`<li class="message user-message"> ${message}</li>`);
+            } else {
+                $('#messages').append(`<li class="message other-message"> ${message}</li>`);
+            }
+        }
 
-    $('#chat-form').submit(function (e) {
-      e.preventDefault();
-      let data = $('#chat-text').val();
-      if (data) {
-        websocket.send(data);
-        window.scrollTo(0, document.body.scrollHeight)
-        $('#chat-text').val('');
-      }
+        var websocket = new WebSocket(webSocketUri);
+
+        websocket.onmessage = function (e) {
+            log(JSON.parse(e.data), true)
+        };
+        websocket.onerror = function (e) {
+            log('에러 발생');
+            console.log(e);
+        };
+
+        $('#chat-form').submit(function (e) {
+            e.preventDefault();
+            let data = $('#chat-text').val();
+            if (data) {
+                websocket.send(data);
+                window.scrollTo(0, document.body.scrollHeight)
+                $('#chat-text').val('');
+            }
+        });
+
+        setUser();
+
+        function setUser() {
+            if (userName !== null) {
+                let apiUrl = "http://localhost:8080/login";
+
+                // API 요청 보내기
+                $.post(apiUrl, {name: userName})
+                    .done(function (response) {
+                        console.log("API 응답:", response);
+                    })
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        console.log("API 요청 실패:", textStatus, errorThrown);
+                    });
+            } else {
+                console.log("사용자가 입력을 취소했습니다.");
+            }
+        }
     });
-
-    let userName = prompt('이름을 입력해주세요', '');
-
-    setUser();
-    function setUser(){
-      if (userName !== null) {
-        let apiUrl = "http://localhost:8080/login";
-
-        // API 요청 보내기
-        $.post(apiUrl, {name:userName})
-                .done(function (response) {
-                  console.log("API 응답:", response);
-                })
-                .fail(function (jqXHR, textStatus, errorThrown) {
-                  console.log("API 요청 실패:", textStatus, errorThrown);
-                });
-      } else {
-        console.log("사용자가 입력을 취소했습니다.");
-      }
-    }
-  });
 </script>
 </body>
 </html>
