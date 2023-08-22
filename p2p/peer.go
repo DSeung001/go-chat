@@ -46,6 +46,7 @@ func (peer *Peer) Read() {
 			return
 		}
 
+		// peer의 conn가 실행이 안되면 삭제 작업
 		for _, p := range Peers.V {
 			if err := p.Conn.WriteMessage(messageType, byteChat); err != nil {
 				log.Printf("conn.WriteMessage: %v", err)

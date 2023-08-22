@@ -9,6 +9,8 @@
 <body>
 <div class="chat-container">
     <ul id="messages">
+<!--        노티스 전용 ws 핸들러 만들기 -->
+<!--        <li class="message notice-message">[]님이 입장했습니다.</li>-->
     </ul>
 
     <form class="input-container" id="chat-form">
@@ -28,7 +30,7 @@
             + '/ws';
         const userName = prompt('이름을 입력해주세요', '');
 
-        function log(data, isAuthor) {
+        function log(data) {
 
             let message = ""
             if (typeof data === 'object') {
@@ -37,7 +39,6 @@
                 message = data
             }
 
-            console.log()
             if (data.Author === userName) {
                 $('#messages').append(`<li class="message user-message"> ${message}</li>`);
             } else {
