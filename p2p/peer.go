@@ -57,14 +57,7 @@ func (peer *Peer) Read() {
 		}
 
 		byteChat = utils.StructToBytes(chat)
-
-		// peer의 conn가 실행이 안되면 삭제 작업
-		for _, p := range Peers.V {
-			if err := p.Conn.WriteMessage(messageType, byteChat); err != nil {
-				log.Printf("conn.WriteMessage: %v", err)
-				continue
-			}
-		}
+		SendMessageToPeers(messageType, byteChat)
 	}
 }
 
@@ -86,13 +79,7 @@ func (p *Peer) close() {
 	leaveChat.Type = strconv.Itoa(0)
 
 	byteChat := utils.StructToBytes(leaveChat)
-
-	for _, p := range Peers.V {
-		if err := p.Conn.WriteMessage(websocket.TextMessage, byteChat); err != nil {
-			log.Printf("conn.WriteMessage: %v", err)
-			continue
-		}
-	}
+	SendMessageToPeers(websocket.TextMessage, byteChat)
 }
 
 // peerNameDuplicationCheck : 파라미터로 온 값이 Peers 에 존재 여부 반환
@@ -106,4 +93,14 @@ func peerNameDuplicationCheck(peer *Peer) bool {
 		}
 	}
 	return false
+}
+
+// SendMessageToPeers : Peers 에 메세지 전달
+func SendMessageToPeers(messageType int, byteChat []byte) {
+	for _, p := range Peers.V {
+		if err := p.Conn.WriteMessage(messageType, byteChat); err != nil {
+			log.Printf("conn.WriteMessage: %v", err)
+			continue
+		}
+	}
 }
