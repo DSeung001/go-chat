@@ -54,7 +54,6 @@ func (peer *Peer) Read() {
 		// Peer 에 이름 추가
 		if !isDuplication {
 			peer.Name = chat.Author
-			// 로그인이 필요하긴 하넼ㅋㅋㅋㅋ
 		}
 
 		byteChat = utils.StructToBytes(chat)

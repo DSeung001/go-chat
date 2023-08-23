@@ -64,6 +64,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	byteChat := utils.StructToBytes(admissionChat)
 
+	// 아래 부분 반복됨
 	for _, p := range p2p.Peers.V {
 		if err := p.Conn.WriteMessage(websocket.TextMessage, byteChat); err != nil {
 			log.Printf("conn.WriteMessage: %v", err)
@@ -71,7 +72,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 결과 반환
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(user.name))
 }
