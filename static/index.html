@@ -9,8 +9,6 @@
 <body>
 <div class="chat-container">
     <ul id="messages">
-<!--        노티스 전용 ws 핸들러 만들기 -->
-<!--        <li class="message notice-message">[]님이 입장했습니다.</li>-->
     </ul>
 
     <form class="input-container" id="chat-form">
@@ -31,19 +29,25 @@
         const userName = prompt('이름을 입력해주세요', '');
 
         function log(data) {
-
             let message = ""
-            if (typeof data === 'object') {
-                message = `[${data.Author}]: ${data.Message}`
-            }else {
-                message = data
-            }
 
-            if (data.Author === userName) {
-                $('#messages').append(`<li class="message user-message"> ${message}</li>`);
-            } else {
-                $('#messages').append(`<li class="message other-message"> ${message}</li>`);
+            console.log(data)
+
+            switch (Number(data.Type)) {
+                case 0 :
+                    message = `<li class="message notice-message">${data.Message}</li>`;
+                    break
+                case 1 :
+                    if (data.Author === userName) {
+                        message = `<li class="message user-message">${data.Author} : ${data.Message}</li>`
+                    } else {
+                        message = `<li class="message other-message">${data.Author} : ${data.Message}</li>`
+                    }
+                    break
+                default :
+                    message = `<li class="message notice-message">내부 문제가 발생했습니다.</li>`;
             }
+            $('#messages').append(message)
         }
 
         var websocket = new WebSocket(webSocketUri);
@@ -62,32 +66,13 @@
             if (data) {
                 websocket.send(
                     JSON.stringify({
-                        Author : userName,
-                        Message : data
+                        Author: userName,
+                        Message: data
                     }));
                 window.scrollTo(0, document.body.scrollHeight)
                 $('#chat-text').val('');
             }
         });
-
-        setUser();
-
-        function setUser() {
-            if (userName !== null) {
-                let apiUrl = "http://localhost:8080/login";
-
-                // API 요청 보내기
-                $.post(apiUrl, {name: userName})
-                    .done(function (response) {
-                        console.log("API 응답:", response);
-                    })
-                    .fail(function (jqXHR, textStatus, errorThrown) {
-                        console.log("API 요청 실패:", textStatus, errorThrown);
-                    });
-            } else {
-                console.log("사용자가 입력을 취소했습니다.");
-            }
-        }
     });
 </script>
 </body>

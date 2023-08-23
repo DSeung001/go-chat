@@ -2,8 +2,8 @@
 package utils
 
 import (
+	"encoding/json"
 	"log"
-	"strings"
 )
 
 var logFn = log.Panic
@@ -14,10 +14,8 @@ func HandleErr(err error) {
 	}
 }
 
-func Splitter(s string, sep string, i int) string {
-	r := strings.Split(s, sep)
-	if len(r)-1 < i {
-		return ""
-	}
-	return r[i]
+func StructToBytes(data interface{}) []byte {
+	bytes, err := json.Marshal(data)
+	HandleErr(err)
+	return bytes
 }

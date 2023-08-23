@@ -14,7 +14,6 @@ func Start(port int) {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/login", LoginHandler).Methods("POST")
 	router.HandleFunc("/ws", socketHandler).Methods("POST", "GET")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
@@ -25,10 +24,6 @@ func Start(port int) {
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-}
-
-type userRequestBody struct {
-	name string
 }
 
 func socketHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,15 +42,4 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	p2p.Peers.V[key] = p
 	go p.Read()
-}
-
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("LoginHandler")
-
-	var user userRequestBody
-	user = userRequestBody{name: r.PostFormValue("name")}
-
-	// 결과 반환
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(user.name))
 }
