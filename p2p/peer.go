@@ -26,7 +26,7 @@ type Peer struct {
 }
 
 // Struct 내부 필드가 전역이 아니면 WriteMessage 에 넘겼을 때 사용을 못함
-type chatMessage struct {
+type ChatMessage struct {
 	Author  string `json:"Author"`
 	Message string `json:"Message"`
 	Type    string `json:"Type"`
@@ -37,7 +37,7 @@ func (peer *Peer) Read() {
 
 	for {
 		messageType, payload, err := peer.Conn.ReadMessage()
-		var chat chatMessage
+		var chat ChatMessage
 		var byteChat []byte
 		var isDuplication bool
 
@@ -54,6 +54,7 @@ func (peer *Peer) Read() {
 		// Peer 에 이름 추가
 		if !isDuplication {
 			peer.Name = chat.Author
+			// 로그인이 필요하긴 하넼ㅋㅋㅋㅋ
 		}
 
 		byteChat = utils.StructToBytes(chat)
@@ -79,7 +80,7 @@ func (p *Peer) close() {
 	delete(Peers.V, p.Key)
 
 	// 퇴장 메시지 발생
-	var leaveChat chatMessage
+	var leaveChat ChatMessage
 
 	leaveChat.Author = "admin"
 	leaveChat.Message = fmt.Sprintf("%s님이 나갔습니다.", p.Name)
