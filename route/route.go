@@ -11,17 +11,16 @@ import (
 	"strconv"
 )
 
+type userRequestBody struct {
+	name string
+}
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
 
-type userRequestBody struct {
-	name string
-}
-
 func Start(port int) {
-
 	router := mux.NewRouter()
 
 	router.HandleFunc("/login", loginHandler).Methods("POST")
@@ -35,10 +34,7 @@ func Start(port int) {
 func socketHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[socketHandler]")
 	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Printf("upgrader.Upgrade: %v", err)
-		return
-	}
+	utils.HandleErr(err)
 
 	key := strconv.Itoa(len(p2p.Peers.V))
 

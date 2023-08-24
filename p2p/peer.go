@@ -15,10 +15,6 @@ type peers struct {
 	m sync.Mutex // Mutex를 넣어야 unlock/lock 가능
 }
 
-var Peers = peers{
-	V: make(map[string]*Peer),
-}
-
 type Peer struct {
 	Key  string
 	Name string
@@ -32,14 +28,18 @@ type ChatMessage struct {
 	Type    string `json:"Type"`
 }
 
+var Peers = peers{
+	V: make(map[string]*Peer),
+}
+
 func (peer *Peer) Read() {
 	defer peer.close()
 
 	for {
-		messageType, payload, err := peer.Conn.ReadMessage()
 		var chat ChatMessage
 		var byteChat []byte
 		var isDuplication bool
+		messageType, payload, err := peer.Conn.ReadMessage()
 
 		isDuplication = PeerNameDuplicationCheck(peer)
 
