@@ -41,7 +41,7 @@ func (peer *Peer) Read() {
 		var byteChat []byte
 		var isDuplication bool
 
-		isDuplication = peerNameDuplicationCheck(peer)
+		isDuplication = PeerNameDuplicationCheck(peer)
 
 		if err != nil {
 			log.Printf("conn.ReadMessage: %v", err)
@@ -82,9 +82,8 @@ func (p *Peer) close() {
 	SendMessageToPeers(websocket.TextMessage, byteChat)
 }
 
-// peerNameDuplicationCheck : 파라미터로 온 값이 Peers 에 존재 여부 반환
-func peerNameDuplicationCheck(peer *Peer) bool {
-	fmt.Println("peerNameDuplicationCheck")
+// PeerNameDuplicationCheck : 파라미터로 온 값이 Peers 에 존재 여부 반환
+func PeerNameDuplicationCheck(peer *Peer) bool {
 	if peer.Name == "" {
 		for _, p := range Peers.V {
 			if p.Name != "" && p.Name == peer.Name {

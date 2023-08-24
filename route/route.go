@@ -56,6 +56,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var user userRequestBody
 	user = userRequestBody{name: r.PostFormValue("name")}
 
+	for _, p := range p2p.Peers.V {
+		// 메세지 보내기 전까지는 p.Name이 안생김
+		fmt.Printf("%s %s\n", p.Name, user.name)
+		if p.Name == user.name {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+	}
+
 	var admissionChat = p2p.ChatMessage{
 		Author:  "admin",
 		Message: fmt.Sprintf("%s님이 참가했습니다.", user.name),
