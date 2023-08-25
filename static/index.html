@@ -8,9 +8,11 @@
 </head>
 <body>
 <div class="user-container">
-    <span>닉네임</span>
-    <input type="text" id="nameInput"/>
-    <button id="nameSave">저장</button>
+    <form id="name-form">
+        <span>닉네임</span>
+        <input type="text" id="name-input"/>
+        <button id="name-save">저장</button>
+    </form>
 </div>
 <div class="chat-container hide">
     <ul id="messages">
@@ -28,8 +30,8 @@
     $(function () {
         const webSocketScheme = window.location.protocol == "https:" ? 'wss://' : 'ws://';
         const baseURI = window.location.hostname + (location.port ? ':' + location.port : '');
-        let nameInput = $("#nameInput");
-        let nameSave = $("#nameSave");
+        const websocket = new WebSocket(webSocketScheme + baseURI + '/ws');
+        let nameInput = $("#name-input");
         let userName
 
         function log(data) {
@@ -53,7 +55,8 @@
         }
 
         function setUser() {
-            if (userName !== null) {
+            if (userName !== undefined) {
+                console.log(userName)
                 $.post( "/login", {name: userName})
                     .done(function (response) {
                         if (response !== ""){
@@ -64,43 +67,40 @@
                         console.log(jqXHR)
                         console.log("API 요청 실패:", textStatus, errorThrown);
                     });
-            } else {
-                userName = prompt('이름을 입력해주세요', '');
             }
         }
 
-        function websocketSetting (){
-            const websocket = new WebSocket(webSocketScheme + baseURI + '/ws');
-            websocket.onmessage = function (e) {
-                log(JSON.parse(e.data))
-            };
-            websocket.onerror = function (e) {
-                log('에러 발생');
-                console.log(e);
-            };
+        websocket.onmessage = function (e) {
+            log(JSON.parse(e.data))
+        };
 
-            $('#chat-form').submit(function (e) {
-                e.preventDefault();
-                let data = $('#chat-text').val();
-                if (data) {
-                    websocket.send(
-                        JSON.stringify({
-                            Author: userName,
-                            Message: data
-                        }));
-                    window.scrollTo(0, document.body.scrollHeight)
-                    $('#chat-text').val('');
-                }
-            });
-        }
+        websocket.onerror = function (e) {
+            log('에러 발생');
+            console.log(e);
+        };
 
-        nameSave.click(function (){
-            userName = nameInput.value;
-            nameSave.hide()
+        $("#name-form").submit(function (e){
+            e.preventDefault()
+            userName = nameInput.val();
+            $("#name-save").hide()
             nameInput.prop("disabled", true);
             $(".chat-container").removeClass("hide");
             setUser()
         })
+
+        $('#chat-form').submit(function (e) {
+            e.preventDefault();
+            let data = $('#chat-text').val();
+            if (data) {
+                websocket.send(
+                    JSON.stringify({
+                        Author: userName,
+                        Message: data
+                    }));
+                window.scrollTo(0, document.body.scrollHeight)
+                $('#chat-text').val('');
+            }
+        });
     });
 </script>
 </body>
