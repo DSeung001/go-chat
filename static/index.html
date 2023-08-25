@@ -7,7 +7,12 @@
     <title>Chat</title>
 </head>
 <body>
-<div class="chat-container">
+<div class="user-container">
+    <span>닉네임</span>
+    <input type="text" id="nameInput"/>
+    <button id="nameSave">저장</button>
+</div>
+<div class="chat-container hide">
     <ul id="messages">
     </ul>
 
@@ -23,10 +28,9 @@
     $(function () {
         const webSocketScheme = window.location.protocol == "https:" ? 'wss://' : 'ws://';
         const baseURI = window.location.hostname + (location.port ? ':' + location.port : '');
-        const websocket = new WebSocket(webSocketScheme + baseURI + '/ws');
-        const userName = prompt('이름을 입력해주세요', '');
-
-        setUser()
+        let nameInput = $("#nameInput");
+        let nameSave = $("#nameSave");
+        let userName
 
         function log(data) {
             let message = ""
@@ -48,42 +52,55 @@
             $('#messages').append(message)
         }
 
-        websocket.onmessage = function (e) {
-            log(JSON.parse(e.data))
-        };
-        websocket.onerror = function (e) {
-            log('에러 발생');
-            console.log(e);
-        };
-
-        $('#chat-form').submit(function (e) {
-            e.preventDefault();
-            let data = $('#chat-text').val();
-            if (data) {
-                websocket.send(
-                    JSON.stringify({
-                        Author: userName,
-                        Message: data
-                    }));
-                window.scrollTo(0, document.body.scrollHeight)
-                $('#chat-text').val('');
-            }
-        });
-
         function setUser() {
             if (userName !== null) {
                 $.post( "/login", {name: userName})
                     .done(function (response) {
-                        console.log("API 응답:", response);
+                        if (response !== ""){
+                            websocketSetting()
+                        }
                     })
                     .fail(function (jqXHR, textStatus, errorThrown) {
                         console.log(jqXHR)
                         console.log("API 요청 실패:", textStatus, errorThrown);
                     });
             } else {
-                console.log("사용자가 입력을 취소했습니다.");
+                userName = prompt('이름을 입력해주세요', '');
             }
         }
+
+        function websocketSetting (){
+            const websocket = new WebSocket(webSocketScheme + baseURI + '/ws');
+            websocket.onmessage = function (e) {
+                log(JSON.parse(e.data))
+            };
+            websocket.onerror = function (e) {
+                log('에러 발생');
+                console.log(e);
+            };
+
+            $('#chat-form').submit(function (e) {
+                e.preventDefault();
+                let data = $('#chat-text').val();
+                if (data) {
+                    websocket.send(
+                        JSON.stringify({
+                            Author: userName,
+                            Message: data
+                        }));
+                    window.scrollTo(0, document.body.scrollHeight)
+                    $('#chat-text').val('');
+                }
+            });
+        }
+
+        nameSave.click(function (){
+            userName = nameInput.value;
+            nameSave.hide()
+            nameInput.prop("disabled", true);
+            $(".chat-container").removeClass("hide");
+            setUser()
+        })
     });
 </script>
 </body>

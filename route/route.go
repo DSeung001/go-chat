@@ -20,6 +20,8 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+var peerKey = 1
+
 func Start(port int) {
 	router := mux.NewRouter()
 
@@ -27,34 +29,29 @@ func Start(port int) {
 	router.HandleFunc("/ws", socketHandler).Methods("POST", "GET")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
+	log.Printf("Listening on localhost:%d", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
-	log.Printf("Listening on port %d", port)
 }
 
+// socketHandler : 웹소캣은 일반적으로 처음에 한번 요청을 보냄
 func socketHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("[socketHandler]")
 	conn, err := upgrader.Upgrade(w, r, nil)
 	utils.HandleErr(err)
 
-	key := strconv.Itoa(len(p2p.Peers.V))
-
 	p := &p2p.Peer{
 		Conn: conn,
-		Key:  key,
+		Key:  strconv.Itoa(peerKey),
 	}
-	p2p.Peers.V[key] = p
+	p2p.Peers.V[strconv.Itoa(peerKey)] = p
+	peerKey++
 	go p.Read()
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("loginHandler")
-
 	var user userRequestBody
 	user = userRequestBody{name: r.PostFormValue("name")}
 
 	for _, p := range p2p.Peers.V {
-		// 메세지 보내기 전까지는 p.Name이 안생김
-		fmt.Printf("%s %s\n", p.Name, user.name)
 		if p.Name == user.name {
 			w.WriteHeader(http.StatusBadRequest)
 		}
