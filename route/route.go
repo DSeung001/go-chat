@@ -82,13 +82,16 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 // 아래꺼가 빈 struct를 가진 슬라이스를 빈게옴
 func getUsersHandler(w http.ResponseWriter, r *http.Request) {
-	var users []userRequestBody
+	var userNames []string
 
 	for _, p := range p2p.Peers.V {
-		users = append(users, userRequestBody{
-			name: p.Name,
-		})
+		userNames = append(userNames, p.Name)
 	}
+
+	jsonUserNames, err := json.Marshal(userNames)
+	utils.HandleErr(err)
+
 	w.Header().Set("Content-Type", "application/json")
-	utils.HandleErr(json.NewEncoder(w).Encode(users))
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonUserNames)
 }

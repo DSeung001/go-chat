@@ -16,10 +16,8 @@
 
     <!--    어떻게 참가자 리스트를 가져오지 ? -->
     <div class="participant-container">
-        <ul>
-            <li>1234</li>
-            <li>1234</li>
-            <li>1234</li>
+        <ul id="participants">
+
         </ul>
     </div>
 
@@ -64,10 +62,11 @@
             $('#messages').append(message)
         }
 
-        function setUser() {
+        function setUser(name) {
             if (userName !== undefined) {
                 $.post("/login", {name: userName})
                     .done(function (response) {
+                        userName = name
                     })
                     .fail(function (jqXHR, textStatus, errorThrown) {
                         console.log(jqXHR)
@@ -79,7 +78,12 @@
         function getUsers() {
             $.get("/getUsers")
                 .done(function (response) {
-                    console.log(response)
+                    $("#participants").empty()
+                    response.forEach(name =>{
+                        if (name !== ""){
+                            $("#participants").append(`<li>${name}</li>`)
+                        }
+                    })
                 })
                 .fail(function (jqXHR, textStatus, errorThrown) {
                     console.log(jqXHR)
@@ -99,11 +103,11 @@
 
         $("#name-form").submit(function (e) {
             e.preventDefault()
-            userName = nameInput.val();
-            $("#name-save").hide()
-            nameInput.prop("disabled", true);
-            $(".chat-container").removeClass("hide");
-            setUser()
+            if(setUser(nameInput.val())){
+                $("#name-save").hide()
+                nameInput.prop("disabled", true);
+                $(".chat-container").removeClass("hide");
+            }
         })
 
         $('#chat-form').submit(function (e) {
