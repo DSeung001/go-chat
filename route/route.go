@@ -12,10 +12,6 @@ import (
 	"strconv"
 )
 
-type userRequestBody struct {
-	name string `json:"name"`
-}
-
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -50,26 +46,25 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	var user userRequestBody
-	user = userRequestBody{name: r.PostFormValue("name")}
+	userName := r.PostFormValue("name")
 
 	// + 이름 중복 테스트하려면 피어에 이름이 있어야함
 	for _, p := range p2p.Peers.V {
-		if p.Name == user.name {
+		if p.Name == userName {
 			w.WriteHeader(http.StatusBadRequest)
 		}
 	}
 
 	for _, p := range p2p.Peers.V {
 		if p.Name == "" {
-			p.Name = user.name
+			p.Name = userName
 			break
 		}
 	}
 
 	var admissionChat = p2p.ChatMessage{
 		Author:  "admin",
-		Message: fmt.Sprintf("%s님이 참가했습니다.", user.name),
+		Message: fmt.Sprintf("%s님이 참가했습니다.", userName),
 		Type:    strconv.Itoa(0),
 	}
 
@@ -77,7 +72,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	p2p.SendMessageToPeers(websocket.TextMessage, byteChat)
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(user.name))
+	w.Write([]byte(userName))
 }
 
 // 아래꺼가 빈 struct를 가진 슬라이스를 빈게옴
