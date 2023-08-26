@@ -84,11 +84,9 @@ func (p *Peer) close() {
 
 // PeerNameDuplicationCheck : 파라미터로 온 값이 Peers 에 존재 여부 반환
 func PeerNameDuplicationCheck(peer *Peer) bool {
-	if peer.Name == "" {
-		for _, p := range Peers.V {
-			if p.Name != "" && p.Name == peer.Name {
-				return true
-			}
+	for _, p := range Peers.V {
+		if p.Name != "" && p.Name == peer.Name {
+			return true
 		}
 	}
 	return false

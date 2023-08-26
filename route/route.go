@@ -3,6 +3,7 @@ package route
 import (
 	"chat.com/p2p"
 	"chat.com/utils"
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -12,7 +13,7 @@ import (
 )
 
 type userRequestBody struct {
-	name string
+	name string `json:"name"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -26,6 +27,7 @@ func Start(port int) {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/login", loginHandler).Methods("POST")
+	router.HandleFunc("/getUsers", getUsersHandler).Methods("GET")
 	router.HandleFunc("/ws", socketHandler).Methods("POST", "GET")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
@@ -51,9 +53,17 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var user userRequestBody
 	user = userRequestBody{name: r.PostFormValue("name")}
 
+	// + 이름 중복 테스트하려면 피어에 이름이 있어야함
 	for _, p := range p2p.Peers.V {
 		if p.Name == user.name {
 			w.WriteHeader(http.StatusBadRequest)
+		}
+	}
+
+	for _, p := range p2p.Peers.V {
+		if p.Name == "" {
+			p.Name = user.name
+			break
 		}
 	}
 
@@ -68,4 +78,17 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(user.name))
+}
+
+// 아래꺼가 빈 struct를 가진 슬라이스를 빈게옴
+func getUsersHandler(w http.ResponseWriter, r *http.Request) {
+	var users []userRequestBody
+
+	for _, p := range p2p.Peers.V {
+		users = append(users, userRequestBody{
+			name: p.Name,
+		})
+	}
+	w.Header().Set("Content-Type", "application/json")
+	utils.HandleErr(json.NewEncoder(w).Encode(users))
 }

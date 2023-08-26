@@ -13,6 +13,16 @@
         <input type="text" id="name-input"/>
         <button id="name-save">저장</button>
     </form>
+
+    <!--    어떻게 참가자 리스트를 가져오지 ? -->
+    <div class="participant-container">
+        <ul>
+            <li>1234</li>
+            <li>1234</li>
+            <li>1234</li>
+        </ul>
+    </div>
+
 </div>
 <div class="chat-container hide">
     <ul id="messages">
@@ -56,12 +66,8 @@
 
         function setUser() {
             if (userName !== undefined) {
-                console.log(userName)
-                $.post( "/login", {name: userName})
+                $.post("/login", {name: userName})
                     .done(function (response) {
-                        if (response !== ""){
-                            websocketSetting()
-                        }
                     })
                     .fail(function (jqXHR, textStatus, errorThrown) {
                         console.log(jqXHR)
@@ -70,7 +76,19 @@
             }
         }
 
+        function getUsers() {
+            $.get("/getUsers")
+                .done(function (response) {
+                    console.log(response)
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR)
+                    console.log("API 요청 실패:", textStatus, errorThrown);
+                });
+        }
+
         websocket.onmessage = function (e) {
+            getUsers()
             log(JSON.parse(e.data))
         };
 
@@ -79,7 +97,7 @@
             console.log(e);
         };
 
-        $("#name-form").submit(function (e){
+        $("#name-form").submit(function (e) {
             e.preventDefault()
             userName = nameInput.val();
             $("#name-save").hide()
