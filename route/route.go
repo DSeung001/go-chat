@@ -12,43 +12,56 @@ import (
 	"strconv"
 )
 
+// upgrader : http 연결을 websocket 연결로 업그레이드하는 데 사용, 안에 내용은 버퍼 사이즈 정의
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
 
+// Peers map 에서 사용할 키 값
 var peerKey = 1
 
+// Start : 각 요청별 핸들러 함수 정의
 func Start(port int) {
 	router := mux.NewRouter()
 
+	// 닉네임 입력시 사용
 	router.HandleFunc("/login", loginHandler).Methods("POST")
+	// 현재 유저 리스트 가져올 때 사용
 	router.HandleFunc("/getUsers", getUsersHandler).Methods("GET")
+	// js에서 Websocket 객체 만들때 사용
 	router.HandleFunc("/ws", socketHandler).Methods("POST", "GET")
+	// index.html 페이지를 루트 페이지로 보여줌
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
 	log.Printf("Listening on localhost:%d", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
 }
 
-// socketHandler : 웹소캣은 일반적으로 처음에 한번 요청을 보냄
+// socketHandler : 앞단에서 js로 Websocket 객체를 만들 때 한번 실행 (처음 연결 후 계속 연결이 유지됨)
 func socketHandler(w http.ResponseWriter, r *http.Request) {
+	// upgrader로 http 연결을 websocket 연결 객체로 변경
 	conn, err := upgrader.Upgrade(w, r, nil)
 	utils.HandleErr(err)
 
+	// 새로운 연결 추가
 	p := &p2p.Peer{
 		Conn: conn,
 		Key:  strconv.Itoa(peerKey),
 	}
 	p2p.Peers.V[strconv.Itoa(peerKey)] = p
 	peerKey++
+
+	// peer의 Read 함수를 고루틴으로 실행
 	go p.Read()
 }
 
+// loginHandler : 로그인 핸들러 함수
 func loginHandler(w http.ResponseWriter, r *http.Request) {
+	// post 데이터로 name을 받음
 	userName := r.PostFormValue("name")
 
-	// + 이름 중복 테스트하려면 피어에 이름이 있어야함
+	// 이름이 존재한다면 에러 반환
 	for _, p := range p2p.Peers.V {
 		if p.Name == userName {
 			w.WriteHeader(http.StatusBadRequest)
@@ -56,6 +69,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// 이름이 존재하지 않는 peer 에 해당 이름을 매칭
 	for _, p := range p2p.Peers.V {
 		if p.Name == "" {
 			p.Name = userName
@@ -63,30 +77,35 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// 참가 메시지 생성, Type : 0은 관리자 메시지
 	var admissionChat = p2p.ChatMessage{
 		Author:  "admin",
 		Message: fmt.Sprintf("%s님이 참가했습니다.", userName),
 		Type:    strconv.Itoa(0),
 	}
 
+	// []byte로 변경 후 전체 peer 에게 메세지 발송
 	byteChat := utils.StructToBytes(admissionChat)
 	p2p.SendMessageToPeers(websocket.TextMessage, byteChat)
 
+	// http 성공 코드 반환
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(userName))
 }
 
-// 아래꺼가 빈 struct를 가진 슬라이스를 빈게옴
+// getUsersHandler : 전체 유저 리스트 요청 핸들러 함수
 func getUsersHandler(w http.ResponseWriter, r *http.Request) {
 	var userNames []string
 
+	// 전체 peer를 돌며 이름을 []string에 저장
 	for _, p := range p2p.Peers.V {
 		userNames = append(userNames, p.Name)
 	}
 
+	// json 으로 변환
 	jsonUserNames, err := json.Marshal(userNames)
 	utils.HandleErr(err)
 
+	// http 성공 코드 및 json 데이터를 반환
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonUserNames)
