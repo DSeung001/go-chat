@@ -62,19 +62,6 @@
             $('#messages').append(message)
         }
 
-        function setUser(name) {
-            if (userName !== undefined) {
-                $.post("/login", {name: userName})
-                    .done(function (response) {
-                        userName = name
-                    })
-                    .fail(function (jqXHR, textStatus, errorThrown) {
-                        console.log(jqXHR)
-                        console.log("API 요청 실패:", textStatus, errorThrown);
-                    });
-            }
-        }
-
         function getUsers() {
             $.get("/getUsers")
                 .done(function (response) {
@@ -103,11 +90,18 @@
 
         $("#name-form").submit(function (e) {
             e.preventDefault()
-            if(setUser(nameInput.val())){
-                $("#name-save").hide()
-                nameInput.prop("disabled", true);
-                $(".chat-container").removeClass("hide");
-            }
+            $.post("/login", {name: nameInput.val() })
+                .done(function (response) {
+                    userName = nameInput.val()
+                    $("#name-save").hide()
+                    nameInput.prop("disabled", true);
+                    $(".chat-container").removeClass("hide");
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR)
+                    console.log("API 요청 실패:", textStatus, errorThrown);
+                    alert("중복되는 닉네임입니다.")
+                });
         })
 
         $('#chat-form').submit(function (e) {

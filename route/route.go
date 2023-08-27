@@ -52,6 +52,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	for _, p := range p2p.Peers.V {
 		if p.Name == userName {
 			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 	}
 
