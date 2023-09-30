@@ -11,6 +11,7 @@ import (
 
 var db *sql.DB
 
+// https://go.dev/doc/tutorial/database-access#multiple_rows
 func main() {
 
 	fmt.Println("USER : ", os.Getenv("DBUSER"))
