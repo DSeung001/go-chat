@@ -3,8 +3,10 @@ package route
 import (
 	"chat.com/p2p"
 	"chat.com/utils"
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/go-session/session/v3"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"log"
@@ -26,13 +28,19 @@ func Start(port int) {
 	router := mux.NewRouter()
 
 	// 닉네임 입력시 사용
-	router.HandleFunc("/login", loginHandler).Methods("POST")
+	router.HandleFunc("/login", loginPostHandler).Methods("POST")
 	// 현재 유저 리스트 가져올 때 사용
 	router.HandleFunc("/getUsers", getUsersHandler).Methods("GET")
 	// js에서 Websocket 객체 만들때 사용
 	router.HandleFunc("/ws", socketHandler).Methods("POST", "GET")
-	// index.html 페이지를 루트 페이지로 보여줌
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
+	// index
+	router.HandleFunc("/", indexHandler).Methods("GET")
+	// login
+	router.HandleFunc("/login", loginGetHandler).Methods("GET")
+
+	// 가설 1 : main.go를 기준으로?
+	staticHandler := http.FileServer(http.Dir("./public"))
+	http.Handle("/public/", http.StripPrefix("/public", staticHandler))
 
 	log.Printf("Listening on localhost:%d", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
@@ -56,8 +64,12 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	go p.Read()
 }
 
-// loginHandler : 로그인 핸들러 함수
-func loginHandler(w http.ResponseWriter, r *http.Request) {
+func loginGetHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./public/login.html")
+}
+
+// loginPostHandler : 로그인 핸들러 함수
+func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 	// post 데이터로 name을 받음
 	userName := r.PostFormValue("name")
 
@@ -109,4 +121,19 @@ func getUsersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonUserNames)
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	store, err := session.Start(context.Background(), w, r)
+	utils.HandleErr(err)
+
+	// index, css가 안먹음
+	_, ok := store.Get("user")
+	if ok {
+		http.ServeFile(w, r, "./public")
+		return
+	}
+	//http.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.ServeFile(w, r, "./public")
+	return
 }
