@@ -3,8 +3,6 @@ package main
 import (
 	"chat.com/route"
 	"database/sql"
-	"fmt"
-	"os"
 )
 
 var db *sql.DB
@@ -12,8 +10,8 @@ var db *sql.DB
 // https://go.dev/doc/tutorial/database-access#multiple_rows
 func main() {
 
-	fmt.Println("USER : ", os.Getenv("DBUSER"))
-	fmt.Println("PASSWORD : ", os.Getenv("DBPASS"))
+	/*	fmt.Println("USER : ", os.Getenv("DBUSER"))
+		fmt.Println("PASSWORD : ", os.Getenv("DBPASS"))*/
 
 	/*	cfg := mysql.Config{
 			User:   os.Getenv("DBUSER"),
