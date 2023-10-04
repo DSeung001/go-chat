@@ -22,19 +22,23 @@ var upgrader = websocket.Upgrader{
 // Peers map 에서 사용할 키 값
 var peerKey = 1
 
+var publicPath = "/public"
+
 // Start : 각 요청별 핸들러 함수 정의
 func Start(port int) {
-	staticHandler := http.FileServer(http.Dir("./public"))
-	http.Handle("/public/", http.StripPrefix("/public", staticHandler))
+	staticHandler := http.FileServer(http.Dir("." + publicPath))
+	http.Handle(publicPath+"/", http.StripPrefix(publicPath, staticHandler))
 
+	// index
+	http.HandleFunc("/", indexHandler)
 	// login
 	http.HandleFunc("/login", loginHandler)
+	// join
+	http.HandleFunc("/join", joinHandler)
 	// 현재 유저 리스트 가져올 때 사용
 	http.HandleFunc("/getUsers", getUsersHandler)
 	// js에서 Websocket 객체 만들때 사용
 	http.HandleFunc("/ws", socketHandler)
-	// index
-	http.HandleFunc("/", indexHandler)
 
 	log.Printf("Listening on localhost:%d", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
@@ -65,12 +69,41 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		store, err := session.Start(context.Background(), w, r)
+		utils.HandleErr(err)
+
+		_, ok := store.Get("user")
+		if ok {
+			http.ServeFile(w, r, "."+publicPath)
+			return
+		}
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	default:
+		fmt.Fprintf(w, "Sorry, only GET methods are supported.")
+	}
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		loginGetHandler(w, r)
 	case "POST":
 		loginPostHandler(w, r)
+	default:
+		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
+	}
+}
+
+func joinHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+
+	case "POST":
+
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
 	}
@@ -100,27 +133,8 @@ func getUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		fmt.Println("index")
-		store, err := session.Start(context.Background(), w, r)
-		utils.HandleErr(err)
-
-		_, ok := store.Get("user")
-		if ok {
-			http.ServeFile(w, r, "./public")
-			return
-		}
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	default:
-		fmt.Fprintf(w, "Sorry, only GET methods are supported.")
-	}
-}
-
 func loginGetHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./public/login.html")
+	http.ServeFile(w, r, "."+publicPath+"/login.html")
 }
 
 // loginPostHandler : 로그인 핸들러 함수
@@ -156,5 +170,13 @@ func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 	p2p.SendMessageToPeers(websocket.TextMessage, byteChat)
 
 	// http 성공 코드 반환
+	w.WriteHeader(http.StatusCreated)
+}
+
+func joinGetHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "."+publicPath+"/join.html")
+}
+
+func joinPostHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }

@@ -129,7 +129,7 @@ body {
   border: 1px solid #ccc;
   border-radius: 3px;
 }
-.form-container button[type=submit] {
+.form-container button {
   background-color: #007bff;
   color: white;
   border: none;
