@@ -2,37 +2,38 @@ package main
 
 import (
 	"chat.com/route"
+	"chat.com/utils"
 	"database/sql"
+	"fmt"
+	"github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
+	"log"
+	"os"
 )
 
+// 전역변수
 var db *sql.DB
 
-// https://go.dev/doc/tutorial/database-access#multiple_rows
 func main() {
+	utils.HandleErr(godotenv.Load(".env"))
 
-	/*	fmt.Println("USER : ", os.Getenv("DBUSER"))
-		fmt.Println("PASSWORD : ", os.Getenv("DBPASS"))*/
+	cfg := mysql.Config{
+		User:   os.Getenv("DBUSER"),
+		Passwd: os.Getenv("DBPASS"),
+		Net:    "tcp",
+		Addr:   os.Getenv("DBHOST") + ":" + os.Getenv("DBPORT"),
+		DBName: os.Getenv("DBNAME"),
+	}
 
-	/*	cfg := mysql.Config{
-			User:   os.Getenv("DBUSER"),
-			Passwd: os.Getenv("DBPASS"),
-			Net:    "tcp",
-			Addr:   "127.0.0.1:3306",
-			DBName: "recordings",
-		}
-		// Get a database handle.
-		var err error
-		db, err = sql.Open("mysql", cfg.FormatDSN())
-		if err != nil {
-			log.Fatal(err)
-		}
+	// Get a database handle.
+	db, err := sql.Open("mysql", cfg.FormatDSN())
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		pingErr := db.Ping()
-		if pingErr != nil {
-			log.Fatal(pingErr)
-		}
-		fmt.Println("Connected!")
-	*/
+	utils.HandleErr(db.Ping())
+	fmt.Println("DB Connected!")
+
 	port := 8080
 	route.Start(port)
 }
