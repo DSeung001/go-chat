@@ -49,7 +49,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		fallthrough
-	case "POST":
+	case http.MethodPost:
 		// upgrader로 http 연결을 websocket 연결 객체로 변경
 		conn, err := upgrader.Upgrade(w, r, nil)
 		utils.HandleErr(err)
@@ -91,7 +91,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		loginGetHandler(w, r)
-	case "POST":
+	case http.MethodPost:
 		loginPostHandler(w, r)
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
@@ -100,9 +100,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 func joinHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		joinGetHandler(w, r)
-	case "POST":
+	case http.MethodPost:
 		joinPostHandler(w, r)
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
@@ -112,7 +112,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 // getUsersHandler : 전체 유저 리스트 요청 핸들러 함수
 func getUsersHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		var userNames []string
 
 		// 전체 peer를 돌며 이름을 []string에 저장

@@ -1,3 +1,5 @@
+USE chat_app;
+
 DROP TABLE IF EXISTS user;
 DROP TABLE IF EXISTS room;
 DROP TABLE IF EXISTS chat;
